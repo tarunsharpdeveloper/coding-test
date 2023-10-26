@@ -5,13 +5,25 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
+use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
 
     public function kanban()
     {
+     
         return view('tasks.index');
+    }
+    public function cardCountTotal(){
+        $count = [];
+        $count['backlog'] = Task::where('phase_id',1)->count();
+        $count['todo'] = Task::where('phase_id',2)->count();
+        $count['doing'] = Task::where('phase_id',3)->count();
+        $count['done'] = Task::where('phase_id',4)->count();
+        $count['archieved'] = Task::where('phase_id',5)->count();
+        $cardCount =  json_encode($count);
+        return $cardCount;
     }
 
     /**
@@ -21,7 +33,7 @@ class TaskController extends Controller
     {
         return \App\Models\Phase::with('tasks.user')->get();
     }
-
+   
     /**
      * Display a listing of the Users resource.
      */
@@ -61,14 +73,45 @@ class TaskController extends Controller
     public function edit(Task $task)
     {
         //
+        return \App\Models\Phase::with('tasks.user')->where('id', $task)->get();
+        
     }
+
+   
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTaskRequest $request, Task $task)
+    // public function update(UpdateTaskRequest $request, Task $task)
+    // {
+    //     dd($request->all());
+    //     try {
+    //         // Attempt to update the task
+    //         $task->update($request->validated());
+
+    //         // Check if the update was successful
+    //         if ($task->wasChanged()) {
+    //             return response()->json(['message' => 'Task updated successfully']);
+    //         } else {
+    //             return response()->json(['message' => 'Task was not modified'], 200);
+    //         }
+    //     } catch (\Exception $e) {
+    //         // Handle any exceptions or errors
+    //         return response()->json(['error' => 'An error occurred while updating the task'], 500);
+    //     }
+    // }
+
+    public function update(Request $request, $id)
     {
-        //
+        $task = Task::findOrFail($id);
+        // Update the task based on the request data
+        $task->update($request->all());
+        if($request->phase_id)
+        {
+            $task->update('completed_at',now());
+        }
+
+        return response()->json($task);
     }
 
     /**
