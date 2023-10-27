@@ -168,7 +168,7 @@
         <div id="kanban-container" class="flex-1 flex overflow-auto scrollbar-hide shadow-lg">
             <div class="text-gray-900">
                 <div class="h-full flex overflow-x-auto overflow-y-auto space-x-4">
-                    <task-column v-for="col in kanban.phases" :phase_id="col.id"  :key="col.id"></task-column>
+                    <task-column v-for="col in kanban.phases"  :phase_id="col.id"  :key="col.id" ></task-column> 
                 </div>
             </div>
         </div>
@@ -178,7 +178,7 @@
             <generic-modal v-if="kanban.hasSelectedTask()" @close="kanban.unselectTask()">
                 <div class="relative">
                     <TrashIcon class="w-6 h-6 absolute top-0 right-0 hover:cursor-pointer" @click="deleteCard(kanban.selectedTask.id)" />
-                    <PencilSquareIcon @click="kanban.editingTask=true, !kanban.hasSelectedTask(), taskIdDetail(kanban.selectedTask.id)" class="w-6 h-6 absolute top-0 right-6 hover:cursor-pointer" />
+                    <PencilSquareIcon v-if="kanban.selectedTask.phase_id!==6" @click="kanban.editingTask=true, taskIdDetail(kanban.selectedTask.id), kanban.unselectTask()" class="w-6 h-6 absolute top-0 right-6 hover:cursor-pointer" />
                     <div class="flex justify-center">
                         <img class="w-16 h-16 shadow-lg rounded-full border-2 border-blue-800"
                             :src="getAvatar(kanban.selectedTask.user)" :alt="kanban.selectedTask.user.name" />
@@ -197,6 +197,18 @@
                         class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                         @click="kanban.unselectTask()">Close</button>
                 </div>
+            </generic-modal>
+        </Teleport>
+           <Teleport to="body">
+            <generic-modal v-if="taskUpdated===true">
+                <div class="relative">
+                    <p>Task Updated Sccessfully</p>
+                </div>
+                <div>
+                    <button type="button"
+                        class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                        @click="taskUpdated=false">Ok</button>
+                </div> 
             </generic-modal>
         </Teleport>
         
@@ -219,7 +231,8 @@ import { sha256 } from 'js-sha256';
 const kanban = useKanbanStore()
 const selected = ref(null)
 const errors = ref(null)
-const taskId = ref(null) 
+const taskId = ref(null)
+const taskUpdated = ref(false)
 const getAvatar = function (user) {
     if (user.profile_picture_url !== null) {
         return user.profile_picture_url;
@@ -282,7 +295,7 @@ const refreshTasks = async () => {
         const response = await axios.get('/api/tasks');
         const originalTasks = response.data;
         kanban.phases = originalTasks.reduce((acc, cur) => {
-            acc[cur.id] = cur;
+            acc[cur.id] = cur; 
             return acc;
         }, {});
     } catch (error) {
@@ -303,11 +316,8 @@ const refreshUsers = async () => {
         console.error('There was an error fetching the users!', error);
     }
 }
-
-    const taskIdDetail = async (id) => {
-                console.log("id", id)
-                //  const response = await axios.get('/api/tasks/' + id);
-                //  console.log("res", response)
+        // getting task id
+    const taskIdDetail = async (id) => { 
                  kanban.editingTaskProps.id = id,
               kanban.editingTaskProps.name=kanban.selectedTask.name,
               kanban.editingTaskProps.phase_id=kanban.selectedTask.phase_id,
@@ -361,12 +371,10 @@ const addCard = async () => {
         }
     }
 }
+//  updating the card
+const updateCard = async (id) => { 
 
-const updateCard = async (id) => {
-    console.log("iddd",id);
-
-    try { 
-          console.log("Try card", id)
+    try {  
         const response = await axios.post('/api/tasks/'+ id, kanban.editingTaskProps);
          
           kanban.editingTask = false;
@@ -375,12 +383,14 @@ const updateCard = async (id) => {
             phase_id: null,
             user_id: null
         };
+        taskUpdated.value=true;
         await refreshTasks();
     } catch (error) {
         if (error.response.status === 422) {
             errors.value = error.response.data.errors;
         }
-    }
+    }  
+    
 }
 
 const deleteCard = async (id) => {
@@ -393,16 +403,16 @@ const deleteCard = async (id) => {
     }
 }
 
-onMounted(async () => {
-    // const  response = await axios.get('/count');
-    // console.log("cardCount", response);
-    // console.log("cardCount", response.data.done);
+  
 
+onMounted(async () => {
+    
     await refreshTasks();
     await refreshUsers();
     await getSelf();
 
     await nextTick();
+ 
 
     ele = document.getElementById('kanban-container');
     if (ele) {

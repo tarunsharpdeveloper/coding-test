@@ -106,9 +106,10 @@ class TaskController extends Controller
         $task = Task::findOrFail($id);
         // Update the task based on the request data
         $task->update($request->all());
-        if($request->phase_id)
+        if(is_null($task->completed_at))
         {
-            $task->update('completed_at',now());
+            $task->completed_at = now();
+            $task->save();
         }
 
         return response()->json($task);
