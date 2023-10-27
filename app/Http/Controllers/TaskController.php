@@ -22,6 +22,7 @@ class TaskController extends Controller
         $count['doing'] = Task::where('phase_id',3)->count();
         $count['done'] = Task::where('phase_id',4)->count();
         $count['archieved'] = Task::where('phase_id',5)->count();
+        $count['completion'] = Task::where('phase_id',6)->count();
         $cardCount =  json_encode($count);
         return $cardCount;
     }

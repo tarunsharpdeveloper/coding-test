@@ -8,6 +8,8 @@
              <span class="cardcount" v-if="props.phase_id===2">{{cardCount.todo}}</span>
              <span class="cardcount" v-if="props.phase_id===3">{{cardCount.doing}}</span>
              <span class="cardcount" v-if="props.phase_id===4">{{cardCount.done}}</span>
+             <span class="cardcount" v-if="props.phase_id===5">{{cardCount.archieved}}</span>
+             <span class="cardcount" v-if="props.phase_id===6">{{cardCount.completion}}</span>
             </h2>
             <PlusIcon 
                 @click="createTask()" 
