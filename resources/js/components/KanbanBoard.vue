@@ -156,9 +156,9 @@
                         </div>
 
                         <div class="mt-5 sm:mt-6" > 
-                            <button type="button"
+                            <button type="button" :disabled="btnLoading"
                                 class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                                @click="updateCard(kanban.editingTaskProps?.id)">Update the card!</button>
+                                @click="updateCard(kanban.editingTaskProps?.id), btnLoading=true">Update the card!</button>
                         </div>
                     </div>
                 </generic-modal>
@@ -177,7 +177,7 @@
         <Teleport to="body">
             <generic-modal v-if="kanban.hasSelectedTask()" @close="kanban.unselectTask()">
                 <div class="relative">
-                    <TrashIcon class="w-6 h-6 absolute top-0 right-0 hover:cursor-pointer" @click="deleteCard(kanban.selectedTask.id)" />
+                    <TrashIcon v-if="kanban.selectedTask.phase_id!==6" class="w-6 h-6 absolute top-0 right-0 hover:cursor-pointer" @click="deleteCard(kanban.selectedTask.id)" />
                     <PencilSquareIcon v-if="kanban.selectedTask.phase_id!==6" @click="kanban.editingTask=true, taskIdDetail(kanban.selectedTask.id), kanban.unselectTask()" class="w-6 h-6 absolute top-0 right-6 hover:cursor-pointer" />
                     <div class="flex justify-center">
                         <img class="w-16 h-16 shadow-lg rounded-full border-2 border-blue-800"
@@ -233,6 +233,7 @@ const selected = ref(null)
 const errors = ref(null)
 const taskId = ref(null)
 const taskUpdated = ref(false)
+const btnLoading = ref(false)
 const getAvatar = function (user) {
     if (user.profile_picture_url !== null) {
         return user.profile_picture_url;
@@ -384,6 +385,7 @@ const updateCard = async (id) => {
             user_id: null
         };
         taskUpdated.value=true;
+        btnLoading.value=false;
         await refreshTasks();
     } catch (error) {
         if (error.response.status === 422) {
@@ -440,4 +442,5 @@ onUnmounted(() => {
     /* IE and Edge */
     scrollbar-width: none;
     /* Firefox */
-}</style>
+}
+</style>
